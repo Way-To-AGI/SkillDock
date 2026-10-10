@@ -1,0 +1,482 @@
+{
+  "source": "https://github.com/vercel-labs/skills/blob/main/src/agents.ts",
+  "checkedAt": "2026-10-10",
+  "agents": [
+    {
+      "agent": "aider-desk",
+      "label": "AiderDesk",
+      "base": "home",
+      "path": ".aider-desk/skills"
+    },
+    {
+      "agent": "amp",
+      "label": "Amp",
+      "base": "config",
+      "path": "agents/skills"
+    },
+    {
+      "agent": "antigravity",
+      "label": "Antigravity",
+      "base": "home",
+      "path": ".gemini/antigravity/skills"
+    },
+    {
+      "agent": "antigravity-cli",
+      "label": "Antigravity CLI",
+      "base": "home",
+      "path": ".gemini/antigravity-cli/skills"
+    },
+    {
+      "agent": "astrbot",
+      "label": "AstrBot",
+      "base": "home",
+      "path": ".astrbot/data/skills"
+    },
+    {
+      "agent": "autohand-code",
+      "label": "Autohand Code CLI",
+      "base": "home",
+      "path": ".autohand/skills",
+      "env": "AUTOHAND_HOME",
+      "envPath": "skills"
+    },
+    {
+      "agent": "augment",
+      "label": "Augment",
+      "base": "home",
+      "path": ".augment/skills"
+    },
+    {
+      "agent": "bob",
+      "label": "IBM Bob",
+      "base": "home",
+      "path": ".bob/skills"
+    },
+    {
+      "agent": "claude-code",
+      "label": "Claude Code",
+      "base": "home",
+      "path": ".claude/skills",
+      "env": "CLAUDE_CONFIG_DIR",
+      "envPath": "skills"
+    },
+    {
+      "agent": "openclaw",
+      "label": "OpenClaw",
+      "base": "home",
+      "path": ".openclaw/skills",
+      "alternatives": [
+        ".clawdbot/skills",
+        ".moltbot/skills"
+      ]
+    },
+    {
+      "agent": "cline",
+      "label": "Cline",
+      "base": "home",
+      "path": ".agents/skills"
+    },
+    {
+      "agent": "codearts-agent",
+      "label": "CodeArts Agent",
+      "base": "home",
+      "path": ".codeartsdoer/skills"
+    },
+    {
+      "agent": "codebuddy",
+      "label": "CodeBuddy",
+      "base": "home",
+      "path": ".codebuddy/skills"
+    },
+    {
+      "agent": "codemaker",
+      "label": "Codemaker",
+      "base": "home",
+      "path": ".codemaker/skills"
+    },
+    {
+      "agent": "codestudio",
+      "label": "Code Studio",
+      "base": "home",
+      "path": ".codestudio/skills"
+    },
+    {
+      "agent": "codex",
+      "label": "Codex",
+      "base": "home",
+      "path": ".agents/skills"
+    },
+    {
+      "agent": "command-code",
+      "label": "Command Code",
+      "base": "home",
+      "path": ".commandcode/skills"
+    },
+    {
+      "agent": "continue",
+      "label": "Continue",
+      "base": "home",
+      "path": ".continue/skills"
+    },
+    {
+      "agent": "cortex",
+      "label": "Cortex Code",
+      "base": "home",
+      "path": ".snowflake/cortex/skills"
+    },
+    {
+      "agent": "crush",
+      "label": "Crush",
+      "base": "home",
+      "path": ".config/crush/skills"
+    },
+    {
+      "agent": "cursor",
+      "label": "Cursor",
+      "base": "home",
+      "path": ".cursor/skills"
+    },
+    {
+      "agent": "deepagents",
+      "label": "Deep Agents",
+      "base": "home",
+      "path": ".deepagents/agent/skills"
+    },
+    {
+      "agent": "devin",
+      "label": "Devin for Terminal",
+      "base": "config",
+      "path": "devin/skills"
+    },
+    {
+      "agent": "dexto",
+      "label": "Dexto",
+      "base": "home",
+      "path": ".agents/skills"
+    },
+    {
+      "agent": "droid",
+      "label": "Droid",
+      "base": "home",
+      "path": ".factory/skills"
+    },
+    {
+      "agent": "firebender",
+      "label": "Firebender",
+      "base": "home",
+      "path": ".firebender/skills"
+    },
+    {
+      "agent": "forgecode",
+      "label": "ForgeCode",
+      "base": "home",
+      "path": ".forge/skills"
+    },
+    {
+      "agent": "fx",
+      "label": "fx",
+      "base": "home",
+      "path": ".agents/skills"
+    },
+    {
+      "agent": "gemini-cli",
+      "label": "Gemini CLI",
+      "base": "home",
+      "path": ".gemini/skills"
+    },
+    {
+      "agent": "github-copilot",
+      "label": "GitHub Copilot",
+      "base": "home",
+      "path": ".copilot/skills"
+    },
+    {
+      "agent": "goose",
+      "label": "Goose",
+      "base": "config",
+      "path": "goose/skills"
+    },
+    {
+      "agent": "grok",
+      "label": "Grok Build",
+      "base": "home",
+      "path": ".grok/skills",
+      "env": "GROK_HOME",
+      "envPath": "skills"
+    },
+    {
+      "agent": "hermes-agent",
+      "label": "Hermes Agent",
+      "base": "home",
+      "path": ".hermes/skills",
+      "env": "HERMES_HOME",
+      "envPath": "skills"
+    },
+    {
+      "agent": "inference-sh",
+      "label": "inference.sh",
+      "base": "home",
+      "path": ".inferencesh/skills"
+    },
+    {
+      "agent": "jazz",
+      "label": "Jazz",
+      "base": "home",
+      "path": ".jazz/skills"
+    },
+    {
+      "agent": "junie",
+      "label": "Junie",
+      "base": "home",
+      "path": ".junie/skills"
+    },
+    {
+      "agent": "iflow-cli",
+      "label": "iFlow CLI",
+      "base": "home",
+      "path": ".iflow/skills"
+    },
+    {
+      "agent": "kilo",
+      "label": "Kilo Code",
+      "base": "home",
+      "path": ".kilo/skills"
+    },
+    {
+      "agent": "kimchi",
+      "label": "Kimchi",
+      "base": "home",
+      "path": ".config/kimchi/harness/skills"
+    },
+    {
+      "agent": "kimi-code-cli",
+      "label": "Kimi Code CLI",
+      "base": "home",
+      "path": ".agents/skills"
+    },
+    {
+      "agent": "kiro-cli",
+      "label": "Kiro CLI",
+      "base": "home",
+      "path": ".kiro/skills"
+    },
+    {
+      "agent": "kode",
+      "label": "Kode",
+      "base": "home",
+      "path": ".kode/skills"
+    },
+    {
+      "agent": "lingma",
+      "label": "Lingma",
+      "base": "home",
+      "path": ".lingma/skills"
+    },
+    {
+      "agent": "loaf",
+      "label": "Loaf",
+      "base": "home",
+      "path": ".agents/skills"
+    },
+    {
+      "agent": "mcpjam",
+      "label": "MCPJam",
+      "base": "home",
+      "path": ".mcpjam/skills"
+    },
+    {
+      "agent": "minimax-code",
+      "label": "MiniMax Code",
+      "base": "home",
+      "path": ".minimax/skills"
+    },
+    {
+      "agent": "mistral-vibe",
+      "label": "Mistral Vibe",
+      "base": "home",
+      "path": ".vibe/skills",
+      "env": "VIBE_HOME",
+      "envPath": "skills"
+    },
+    {
+      "agent": "moxby",
+      "label": "Moxby",
+      "base": "home",
+      "path": ".moxby/skills"
+    },
+    {
+      "agent": "mux",
+      "label": "Mux",
+      "base": "home",
+      "path": ".mux/skills"
+    },
+    {
+      "agent": "opencode",
+      "label": "OpenCode",
+      "base": "config",
+      "path": "opencode/skills"
+    },
+    {
+      "agent": "openhands",
+      "label": "OpenHands",
+      "base": "home",
+      "path": ".openhands/skills"
+    },
+    {
+      "agent": "ona",
+      "label": "Ona",
+      "base": "home",
+      "path": ".ona/skills"
+    },
+    {
+      "agent": "pi",
+      "label": "Pi",
+      "base": "home",
+      "path": ".agents/skills"
+    },
+    {
+      "agent": "posit-assistant",
+      "label": "Posit Assistant",
+      "base": "home",
+      "path": ".posit/assistant/skills"
+    },
+    {
+      "agent": "qoder",
+      "label": "Qoder",
+      "base": "home",
+      "path": ".qoder/skills"
+    },
+    {
+      "agent": "qoder-cn",
+      "label": "Qoder CN",
+      "base": "home",
+      "path": ".qoder-cn/skills"
+    },
+    {
+      "agent": "qwen-code",
+      "label": "Qwen Code",
+      "base": "home",
+      "path": ".qwen/skills"
+    },
+    {
+      "agent": "replit",
+      "label": "Replit",
+      "base": "config",
+      "path": "agents/skills"
+    },
+    {
+      "agent": "reasonix",
+      "label": "Reasonix",
+      "base": "home",
+      "path": ".reasonix/skills"
+    },
+    {
+      "agent": "rovodev",
+      "label": "Rovo Dev",
+      "base": "home",
+      "path": ".rovodev/skills"
+    },
+    {
+      "agent": "roo",
+      "label": "Roo Code",
+      "base": "home",
+      "path": ".roo/skills"
+    },
+    {
+      "agent": "sarvam-code",
+      "label": "Sarvam Code",
+      "base": "home",
+      "path": ".agents/skills"
+    },
+    {
+      "agent": "tabnine-cli",
+      "label": "Tabnine CLI",
+      "base": "home",
+      "path": ".tabnine/agent/skills"
+    },
+    {
+      "agent": "terramind",
+      "label": "Terramind",
+      "base": "home",
+      "path": ".terramind/skills"
+    },
+    {
+      "agent": "tinycloud",
+      "label": "Tinycloud",
+      "base": "home",
+      "path": ".tinycloud/skills"
+    },
+    {
+      "agent": "trae",
+      "label": "Trae",
+      "base": "home",
+      "path": ".trae/skills"
+    },
+    {
+      "agent": "trae-cn",
+      "label": "Trae CN",
+      "base": "home",
+      "path": ".trae-cn/skills"
+    },
+    {
+      "agent": "warp",
+      "label": "Warp",
+      "base": "home",
+      "path": ".agents/skills"
+    },
+    {
+      "agent": "windsurf",
+      "label": "Windsurf",
+      "base": "home",
+      "path": ".codeium/windsurf/skills"
+    },
+    {
+      "agent": "zed",
+      "label": "Zed",
+      "base": "home",
+      "path": ".agents/skills"
+    },
+    {
+      "agent": "zcode",
+      "label": "ZCode",
+      "base": "home",
+      "path": ".zcode/skills"
+    },
+    {
+      "agent": "zencoder",
+      "label": "Zencoder",
+      "base": "home",
+      "path": ".zencoder/skills"
+    },
+    {
+      "agent": "zenflow",
+      "label": "Zenflow",
+      "base": "home",
+      "path": ".zencoder/skills"
+    },
+    {
+      "agent": "neovate",
+      "label": "Neovate",
+      "base": "home",
+      "path": ".neovate/skills"
+    },
+    {
+      "agent": "pochi",
+      "label": "Pochi",
+      "base": "home",
+      "path": ".pochi/skills"
+    },
+    {
+      "agent": "adal",
+      "label": "AdaL",
+      "base": "home",
+      "path": ".adal/skills"
+    },
+    {
+      "agent": "universal",
+      "label": "Universal",
+      "base": "config",
+      "path": "agents/skills"
+    }
+  ]
+}

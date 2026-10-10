@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>SkillDock</title>
+    <link rel="icon" href="/icon.svg" />
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <div class="titlebar"></div>
+    <aside class="sidebar">
+      <div class="sidebar-brand"><span class="mark">⌘</span> SkillDock</div>
+      <div class="nav-label">技能库</div>
+      <nav id="smartViews"></nav>
+      <div class="nav-label agent-heading">
+        AGENTS
+        <button id="manageAgents" class="icon" aria-label="管理 Agent 目录">
+          ＋
+        </button>
+      </div>
+      <nav id="agentNavigation" class="agent-navigation"></nav>
+      <div class="sidebar-bottom">
+        <button id="sideDiscover">◇ 发现技能 <small>skills.sh</small></button
+        ><button id="sideTrash">
+          ♧ 回收站 <small id="sideTrashCount"></small></button
+        ><button id="sideDirectories">▱ 全局目录</button
+        ><span class="version-label">SkillDock v1.3.0</span>
+      </div>
+    </aside>
+    <div class="app">
+      <header>
+        <div class="breadcrumb">工作空间 <span>/</span> 全局技能</div>
+        <div class="header-actions">
+          <button class="primary" id="create">＋ 新建</button
+          ><button id="more" aria-label="更多操作">···</button>
+          <div class="menu" id="menu" hidden>
+            <button id="discover">发现技能</button
+            ><button id="directories">Agent 目录</button
+            ><button id="trashMenu">回收站</button
+            ><button id="refresh">刷新</button>
+          </div>
+        </div>
+      </header>
+      <div class="page-heading">
+        <div>
+          <span class="eyebrow">GLOBAL SKILLS</span>
+          <h1 id="viewTitle">全部技能</h1>
+          <p id="viewDescription">统一管理各类 Agent 的全局技能。</p>
+        </div>
+        <span id="summary" class="summary"></span>
+      </div>
+      <div class="workspace">
+        <section class="library">
+          <div class="toolbar" id="toolbar"></div>
+          <div class="source-filters" id="sourceFilters"></div>
+          <div class="thead">
+            <input
+              type="checkbox"
+              id="selectAll"
+              aria-label="全选当前结果"
+            /><span>技能</span><span>安装于</span><span>状态</span>
+          </div>
+          <div class="rows" id="rows"></div>
+        </section>
+        <aside class="editor" id="editor" hidden></aside>
+      </div>
+      <footer>
+        <span id="count"></span><span>全局技能 · 修改保存到本地</span>
+      </footer>
+    </div>
+    <dialog id="dialog"></dialog>
+    <div class="toast" id="toast" hidden>
+      <span id="toastText"></span><button id="undo">撤销</button
+      ><button id="dismiss" aria-label="关闭通知">×</button>
+    </div>
+    <script src="/app.js"></script>
+  </body>
+</html>
