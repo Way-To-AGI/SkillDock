@@ -1,12 +1,12 @@
 {
   "name": "skilldock",
-  "version": "1.3.1",
+  "version": "1.4.0",
   "description": "Local agent skills manager with skills.sh discovery",
   "main": "desktop.cjs",
   "private": true,
   "scripts": {
     "start": "electron .",
-    "package": "electron-packager . SkillDock --electron-version=39.8.10 --platform=darwin --arch=arm64 --out=release --overwrite --ignore=^/release --ignore=^/data --ignore=__pycache__ --ignore=^/tests --ignore=^/README --icon=assets/SkillDock.icns --app-bundle-id=local.skilldock.app --app-version=1.3.1",
+    "package": "electron-packager . SkillDock --electron-version=39.8.10 --platform=darwin --arch=arm64 --out=release --overwrite --ignore=^/release --ignore=^/data --ignore=__pycache__ --ignore=^/tests --ignore=^/README --icon=assets/SkillDock.icns --app-bundle-id=local.skilldock.app --app-version=1.4.0",
     "test": "python3 -m unittest discover -s tests -v && node --test tests/web.test.cjs",
     "test:network": "python3 scripts/network-smoke.py"
   },

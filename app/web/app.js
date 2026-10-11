@@ -1,6 +1,7 @@
 let smartView = "all",
   originFilter = "",
-  detailTab = "overview",
+  detailTab = "source",
+  creating = null,
   initialOpened = false;
 let scanReport = {},
   records = [],
@@ -70,7 +71,7 @@ function visible() {
     (g) =>
       (!agent || g.copies.some((r) => r.agent === agent)) &&
       (!q ||
-        [g.name, g.description, ...g.copies.map((r) => r.agentLabel)]
+        [g.name, ...g.copies.flatMap((r) => [r.description, r.agentLabel])]
           .join(" ")
           .toLowerCase()
           .includes(q)) &&
@@ -82,28 +83,25 @@ function scoped(g) {
   return g.copies.filter((r) => !agent || r.agent === agent);
 }
 function renderToolbarCore() {
-  const t = $("#toolbar");
-  if (selected.size) {
-    t.innerHTML = `<div class="batch"><span class="selection-count">已选 ${selected.size} 项</span><button id="batchCopy">复制到…</button><button id="batchDelete" class="danger">删除</button><button id="clearSelection" class="icon" aria-label="取消选择">×</button></div>`;
-    $("#batchCopy").onclick = () => copyModal([...selected]);
-    $("#batchDelete").onclick = () => deleteModal([...selected]);
-    $("#clearSelection").onclick = () => {
-      selected.clear();
-      render();
-    };
-  } else {
-    const labels = new Map();
-    for (let r of records) labels.set(r.agent, r.agentLabel);
-    t.innerHTML = `<label class="search"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="search" type="search" placeholder="搜索技能" aria-label="搜索技能" value="${esc(query)}"></label><select id="agent" aria-label="筛选 Agent"><option value="">所有 Agent</option>${[...labels].map(([id, label]) => `<option value="${esc(id)}" ${id === agent ? "selected" : ""}>${esc(label)}</option>`).join("")}</select>`;
-    $("#search").oninput = (e) => {
-      query = e.target.value;
-      renderRows();
-    };
-    $("#agent").onchange = (e) => {
-      agent = e.target.value;
-      renderRows();
-    };
-  }
+  const labels = new Map();
+  for (let r of records) labels.set(r.agent, r.agentLabel);
+  $("#toolbar").innerHTML = `<label class="search"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="search" type="search" placeholder="搜索名称、描述或 Agent" aria-label="搜索技能" value="${esc(query)}"></label><select id="agent" aria-label="筛选 Agent"><option value="">所有 Agent</option>${[...labels].map(([id, label]) => `<option value="${esc(id)}" ${id === agent ? "selected" : ""}>${esc(label)}</option>`).join("")}</select>${selected.size ? `<div class="batch"><span class="selection-count">已选 ${selected.size} 项</span><button id="batchCopy">添加到 Agent…</button><button id="batchDelete" class="danger">删除</button><button id="clearSelection" class="icon" aria-label="取消选择">×</button></div>` : ""}`;
+  $("#search").oninput = (e) => {
+    query = e.target.value;
+    renderRows();
+  };
+  $("#agent").onchange = (e) => {
+    agent = e.target.value;
+    selected.clear();
+    renderToolbar();
+    renderRows();
+  };
+  if ($("#batchCopy")) $("#batchCopy").onclick = () => copyModal([...selected]);
+  if ($("#batchDelete")) $("#batchDelete").onclick = () => deleteModal([...selected]);
+  if ($("#clearSelection")) $("#clearSelection").onclick = () => {
+    selected.clear();
+    render();
+  };
 }
 function renderRowsCore() {
   const list = visible(),
@@ -173,7 +171,7 @@ async function refresh() {
   const names = new Set(records.map((r) => r.name));
   selected = new Set([...selected].filter((n) => names.has(n)));
   render();
-  if (!initialOpened && records.length) {
+  if (!initialOpened && !creating && !busy && records.length) {
     initialOpened = true;
     const first = records.find((r) => r.name === "agent-reach") || records[0];
     openSkill(first.name);
@@ -189,11 +187,15 @@ function leave() {
     dirty = false;
     renderEditor();
   }
+  if (creating) {
+    creating = null;
+    renderEditor();
+  }
   return true;
 }
 async function openSkill(name, id) {
   if (!leave()) return;
-  if (!id) detailTab = "overview";
+  detailTab = "source";
   const g = groups().find((g) => g.name === name);
   if (!g) return;
   activeRemote = null;
@@ -244,12 +246,13 @@ function renderEditorCore() {
   }
   el.hidden = false;
   let copies = r.remote ? [r] : records.filter((x) => x.name === r.name);
-  el.innerHTML = `<div class="editor-head"><span class="editor-title">${esc(r.name)} <span id="changed" class="badge"></span></span><button id="closeEditor" class="icon" aria-label="关闭编辑器">×</button></div><div class="location"><div class="location-top">${copies.length > 1 ? `<select id="locationSelect" aria-label="选择技能副本">${copies.map((x) => `<option value="${esc(x.id)}" ${x.id === r.id ? "selected" : ""}>${esc(x.agentLabel)}${x.readonly ? " · 只读" : ""}</option>`).join("")}</select>` : `<span>${esc(r.remote ? r.source : r.agentLabel)}</span>`}<span class="readonly">${r.remote ? "skills.sh" : r.readonly ? "只读" : ""}</span></div><div class="path">${esc(r.remote ? r.source + "/" + r.skillId : r.path + "/SKILL.md")}</div>${finderAction(r)}${r.usedBy?.length > 1 ? `<div class="tiny">源文件被 ${esc(r.usedBy.join("、"))} 引用，保存会影响这些引用。</div>` : ""}${r.linked && r.canonicalId ? '<button id="editSource" class="link-button">编辑全局源文件 ↗</button>' : ""}</div><textarea class="document" id="content" spellcheck="false" aria-label="SKILL.md 内容" ${r.readonly ? "readonly" : ""}></textarea><div class="editor-actions">${r.remote ? '<button id="install" class="primary">安装到…</button>' : `${!r.readonly ? '<button id="save" class="primary" disabled>保存</button>' : ""}<button id="copy">复制到…</button><span class="spacer"></span>${removable(r) ? '<button id="delete" class="danger">删除</button>' : ""}`}</div>`;
+  el.innerHTML = `<div class="editor-head"><span class="editor-title">${esc(r.name)} <span id="changed" class="badge"></span></span><button id="closeEditor" class="icon" aria-label="关闭编辑器">×</button></div><div class="location"><div class="location-top">${copies.length > 1 ? `<select id="locationSelect" aria-label="选择技能副本">${copies.map((x) => `<option value="${esc(x.id)}" ${x.id === r.id ? "selected" : ""}>${esc(x.agentLabel)}${x.readonly ? " · 只读" : ""}</option>`).join("")}</select>` : `<span>${esc(r.remote ? r.source : r.agentLabel)}</span>`}${finderAction(r)}<span class="readonly">${r.remote ? "skills.sh" : r.readonly ? "只读" : ""}</span></div><div class="path">${esc(r.remote ? r.source + "/" + r.skillId : r.path + "/SKILL.md")}</div>${r.usedBy?.length > 1 ? `<div class="tiny">源文件被 ${esc(r.usedBy.join("、"))} 引用，保存会影响这些引用。</div>` : ""}${r.linked && r.canonicalId ? '<button id="editSource" class="link-button">编辑全局源文件 ↗</button>' : ""}</div><textarea class="document" id="content" spellcheck="false" aria-label="SKILL.md 内容" ${r.readonly ? "readonly" : ""}></textarea><div class="editor-actions">${r.remote ? '<button id="install" class="primary">添加到 Agent…</button>' : `<button id="copy">添加到 Agent…</button>${removable(r) ? '<button id="delete" class="danger">删除此副本</button>' : ""}<span class="spacer"></span>${!r.readonly ? '<button id="discardEdit" hidden>取消</button><button id="save" class="primary" disabled>保存</button>' : ""}`}</div>`;
   $("#content").value = r.content || "";
   $("#content").oninput = () => {
     dirty = $("#content").value !== r.content;
     $("#changed").textContent = dirty ? "未保存" : "";
     if ($("#save")) $("#save").disabled = !dirty;
+    if ($("#discardEdit")) $("#discardEdit").hidden = !dirty;
   };
   $("#closeEditor").onclick = () => {
     if (leave()) {
@@ -261,10 +264,18 @@ function renderEditorCore() {
     }
   };
   if ($("#locationSelect"))
-    $("#locationSelect").onchange = (e) => openSkill(r.name, e.target.value);
+    $("#locationSelect").onchange = (e) => {
+      const id = e.target.value;
+      e.target.value = r.id;
+      openSkill(r.name, id);
+    };
+  if ($("#discardEdit")) $("#discardEdit").onclick = () => {
+    dirty = false;
+    renderEditor();
+  };
   if ($("#save")) $("#save").onclick = save;
   if ($("#copy")) $("#copy").onclick = () => copyModal([r.name], r.id);
-  if ($("#delete")) $("#delete").onclick = () => deleteModal([r.name], r.id);
+  if ($("#delete")) $("#delete").onclick = () => deleteCopy(r);
   if ($("#editSource"))
     $("#editSource").onclick = () => {
       const source = records.find((x) => x.id === r.canonicalId);
@@ -278,6 +289,7 @@ function notify(message, undoable = false) {
   $("#toast").hidden = false;
 }
 async function save() {
+  if (creating) return createDraft();
   const r = records.find((r) => r.id === activeId);
   if (!r || r.readonly || !dirty || busy) return;
   busy = true;
@@ -323,10 +335,13 @@ function modal(title, body, action, label = "确认") {
   };
   if (!d.open) d.showModal();
 }
-function targetChoices() {
+function targetChoices(names = []) {
   const available = roots.filter((r) => !r.readonly),
-    row = (r) =>
-      `<label class="choice"><input type="checkbox" name="target" value="${esc(r.id)}"><span>${esc(r.label)}</span></label>`;
+    row = (r) => {
+      const installed = names.filter((name) => records.some((x) => x.rootId === r.id && (x.name === name || x.folder === name))).length;
+      const complete = names.length > 0 && installed === names.length;
+      return `<label class="choice ${complete ? "installed" : ""}"><input type="checkbox" name="target" value="${esc(r.id)}" ${complete ? "disabled" : ""}><span>${esc(r.label)}${installed ? `<small>${complete ? "已安装" : `已安装 ${installed}/${names.length} 项`}</small>` : ""}</span></label>`;
+    };
   const existing = available.filter((r) => r.exists),
     other = available.filter((r) => !r.exists);
   return (
@@ -339,8 +354,8 @@ function targetChoices() {
 function copyModal(names, sourceId) {
   if (!leave()) return;
   modal(
-    names.length === 1 ? "复制技能" : "复制 " + names.length + " 项",
-    `<p class="note">复制完整技能文件夹，已有同名目录会跳过。</p>${targetChoices()}`,
+    names.length === 1 ? "添加到 Agent" : "添加 " + names.length + " 项到 Agent",
+    `<p class="note">${esc(names.join("、"))} · 保留完整附件，已有同名目录跳过。</p>${targetChoices(names)}`,
     async () => {
       const ids = [...document.querySelectorAll("[name=target]:checked")].map(
         (x) => x.value,
@@ -394,7 +409,7 @@ function copyModal(names, sourceId) {
         `已复制 ${added} 份${skipped ? " · 跳过 " + skipped + " 份同名目录" : ""}`,
       );
     },
-    "复制",
+    "添加",
   );
 }
 function deleteModal(names, id) {
@@ -462,52 +477,80 @@ async function undoDelete() {
 }
 function newSkill() {
   if (!leave()) return;
-  detailTab = "source";
-  modal(
-    "新建技能",
-    `<label class="field">名称<input id="newName" placeholder="my-skill" autocomplete="off"></label><label class="field">描述<input id="newDescription" placeholder="这个技能用来做什么"></label><label class="field">Agent<select id="newRoot">${roots
-      .filter((r) => !r.readonly)
-      .map(
-        (r) =>
-          `<option value="${esc(r.id)}" ${r.agent === agent ? "selected" : ""}>${esc(r.label)}</option>`,
-      )
-      .join("")}</select></label>`,
-    async () => {
-      const name = $("#newName").value.trim(),
-        description = $("#newDescription").value.trim(),
-        root = roots.find((r) => r.id === $("#newRoot").value);
-      if (!/^[a-zA-Z0-9][a-zA-Z0-9._-]{0,99}$/.test(name))
-        throw Error(
-          "名称需以字母或数字开头，使用字母、数字、点、短横线或下划线",
-        );
-      if (!description) throw Error("请填写技能描述");
-      if (!root) throw Error("请先添加 Agent 目录");
-      const result = await api("/api/create", {
-        rootId: root.id,
-        folder: name,
-        content:
-          "---\nname: " +
-          JSON.stringify(name) +
-          "\ndescription: " +
-          JSON.stringify(description) +
-          "\n---\n\n# " +
-          name +
-          "\n\n",
-      });
-      $("#dialog").close();
-      query = "";
-      agent = root.agent;
-      selected.clear();
-      activeRemote = null;
-      activeId = result.id;
-      await refresh();
-      await reloadEditor();
-      notify("已创建");
-      $("#content")?.focus();
-    },
-    "创建",
-  );
+  const available = roots.filter((r) => !r.readonly);
+  if (!available.length) return notify("请先添加可编辑的 Agent 目录");
+  creating = { name: "", description: "", body: "", rootId: (available.find((r) => r.agent === agent) || available.find((r) => r.exists) || available[0]).id };
+  activeId = null;
+  activeRemote = null;
+  loadSerial++;
+  initialOpened = true;
+  renderEditor();
+  renderRows();
   $("#newName").focus();
+}
+function renderNewSkill() {
+  const panel = $("#editor");
+  panel.hidden = false;
+  panel.innerHTML = `<div class="editor-head"><span class="editor-title">新建技能 <span id="changed" class="badge">${dirty ? "未保存" : ""}</span></span><button id="closeEditor" class="icon" aria-label="关闭编辑器">×</button></div><div class="draft-fields"><label class="field">名称<input id="newName" placeholder="my-skill" autocomplete="off" value="${esc(creating.name)}"></label><label class="field">描述<input id="newDescription" placeholder="这个技能用来做什么" value="${esc(creating.description)}"></label><label class="field">添加到 Agent<select id="newRoot">${roots.filter((r) => !r.readonly).map((r) => `<option value="${esc(r.id)}" ${r.id === creating.rootId ? "selected" : ""}>${esc(r.label)}</option>`).join("")}</select></label></div><textarea class="document" id="content" spellcheck="false" aria-label="技能正文" placeholder="在这里写技能说明…"></textarea><p class="draft-error" id="draftError" role="alert"></p><div class="editor-actions"><button id="cancelDraft">取消</button><span class="spacer"></span><button id="save" class="primary">创建技能</button></div>`;
+  $("#content").value = creating.body;
+  for (const [id, field] of [["newName", "name"], ["newDescription", "description"], ["newRoot", "rootId"], ["content", "body"]]) {
+    $("#" + id).oninput = (e) => {
+      creating[field] = e.target.value;
+      dirty = true;
+      $("#changed").textContent = "未保存";
+      $("#draftError").textContent = "";
+    };
+  }
+  $("#save").onclick = createDraft;
+  $("#closeEditor").onclick = $("#cancelDraft").onclick = () => {
+    if (leave()) renderEditor();
+  };
+}
+async function createDraft() {
+  if (!creating || busy) return;
+  const draft = { ...creating }, name = draft.name.trim(), description = draft.description.trim();
+  const root = roots.find((r) => r.id === draft.rootId && !r.readonly);
+  try {
+    if (!/^[a-zA-Z0-9][a-zA-Z0-9._-]{0,99}$/.test(name)) throw Error("名称使用字母、数字、点、短横线或下划线，以字母或数字开头");
+    if (!description) throw Error("请填写技能描述");
+    if (!root) throw Error("请选择可编辑的 Agent 目录");
+    busy = true;
+    for (const input of $("#editor").querySelectorAll("input, select, textarea, button")) input.disabled = true;
+    const result = await api("/api/create", { rootId: root.id, folder: name, content: "---\nname: " + JSON.stringify(name) + "\ndescription: " + JSON.stringify(description) + "\n---\n\n" + (draft.body || "# " + name + "\n\n") });
+    creating = null;
+    dirty = false;
+    query = "";
+    agent = root.agent;
+    smartView = "all";
+    originFilter = "";
+    selected.clear();
+    activeId = result.id;
+    await refresh();
+    await reloadEditor();
+    notify("已创建技能");
+    $("#content")?.focus();
+  } catch (e) {
+    if (creating) $("#draftError").textContent = e.message;
+    else notify(e.message);
+  } finally {
+    busy = false;
+    if (creating) for (const input of $("#editor").querySelectorAll("input, select, textarea, button")) input.disabled = false;
+  }
+}
+async function deleteCopy(record) {
+  if (!removable(record) || !leave()) return;
+  busy = true;
+  try {
+    const result = await api("/api/delete", { id: record.id });
+    undoState = [result.trashId];
+    await refresh();
+    await reloadEditor();
+    notify(`已移入回收站：${record.name} · ${record.agentLabel}`, true);
+  } catch (error) {
+    notify(error.message);
+  } finally {
+    busy = false;
+  }
 }
 function trashModal() {
   if (!leave()) return;
@@ -712,8 +755,8 @@ async function openRemote(item) {
 }
 function installModal(item) {
   modal(
-    "安装技能",
-    `<p class="note">${esc(item.name)} · 包含 ${item.files.length} 个文件</p>${targetChoices()}`,
+    "添加到 Agent",
+    `<p class="note">${esc(item.name)} · 包含 ${item.files.length} 个文件</p>${targetChoices([item.skillId])}`,
     async () => {
       const rootIds = [
         ...document.querySelectorAll("[name=target]:checked"),
@@ -726,10 +769,21 @@ function installModal(item) {
         rootIds,
       });
       await refresh();
+      const installed = records.find((r) => rootIds.includes(r.rootId) && r.folder === item.skillId);
+      if (installed) {
+        activeRemote = null;
+        activeId = installed.id;
+        agent = "";
+        query = "";
+        smartView = "all";
+        originFilter = "";
+        await reloadEditor();
+        render();
+      }
       $("#dialog").close();
       notify(result.message);
     },
-    "安装",
+    "添加",
   );
 }
 $("#create").onclick = newSkill;
@@ -758,7 +812,7 @@ document.addEventListener("keydown", (e) => {
     e.preventDefault();
     if (dirty) save();
   }
-  if (e.key === "Escape" && !$("#dialog").open && (activeId || activeRemote)) {
+  if (e.key === "Escape" && !$("#dialog").open && (activeId || activeRemote || creating)) {
     if (leave()) {
       activeId = null;
       activeRemote = null;
@@ -885,7 +939,12 @@ function renderToolbar() {
       ([id, label]) =>
         `<button data-origin="${id}" class="${originFilter === id ? "current" : ""}">${label}</button>`,
     )
-    .join("");
+    .join("") + (agent ? `<button id="clearAgentFilter" class="filter-chip">${esc(records.find((r) => r.agent === agent)?.agentLabel || agent)} ×</button>` : "");
+  if ($("#clearAgentFilter")) $("#clearAgentFilter").onclick = () => {
+    agent = "";
+    selected.clear();
+    render();
+  };
   for (let b of document.querySelectorAll("[data-origin]"))
     b.onclick = () => {
       originFilter = b.dataset.origin;
@@ -911,73 +970,29 @@ function renderRows() {
   if ($("#smartViews")) renderNavigation();
 }
 function renderEditor() {
+  if (creating) return renderNewSkill();
   renderEditorCore();
   const r = activeRemote || records.find((r) => r.id === activeId);
   if (!r) return;
   const panel = $("#editor");
-  const tabs = document.createElement("div");
-  tabs.className = "detail-tabs";
-  tabs.innerHTML = [
-    ["overview", "安装分布"],
-    ["source", r.readonly ? "SKILL.md" : "编辑内容"],
-    ["files", "附件 " + (r.files?.length || 0)],
-  ]
-    .map(
-      ([id, label]) =>
-        `<button data-detail-tab="${id}" class="${detailTab === id ? "current" : ""}">${label}</button>`,
-    )
-    .join("");
-  panel.querySelector(".editor-head").after(tabs);
-  for (let b of tabs.querySelectorAll("button"))
-    b.onclick = () => {
-      detailTab = b.dataset.detailTab;
-      applyDetailTab();
-    };
-  const overview = document.createElement("div");
-  overview.className = "detail-overview";
   const copies = r.remote ? [r] : records.filter((x) => x.name === r.name);
-  overview.innerHTML = `<p class="detail-description">${esc(r.description || "暂无描述")}</p><p class="detail-label">${r.remote ? "远程来源" : "已安装 " + copies.length + " 份"}</p>${copies.map((x) => `<div class="installation ${r.id === x.id ? "current" : ""}"><div class="installation-header"><span>${esc(x.remote ? x.source : x.agentLabel)}</span><small>${x.remote ? "GitHub" : x.linked ? "链接" : x.readonly ? "只读" : "可编辑"}</small></div><div class="path">${esc(x.remote ? x.source + "/" + x.skillId : x.path)}</div>${!x.remote ? `<button data-open-copy="${esc(x.id)}">${x.id === r.id ? "编辑此副本" : "打开此副本"} ↗</button> ${finderAction(x)}` : ""}</div>`).join("")}<div class="help-note">${r.remote ? "安装包含完整技能文件夹。" : r.usedBy?.length > 1 ? "当前源文件被 " + esc(r.usedBy.join("、")) + " 引用。" : "复制到其他 Agent 后成为独立副本；保存针对当前选中的路径。"}</div>`;
+  const overview = document.createElement("details");
+  overview.className = "detail-overview detail-fold";
+  overview.innerHTML = `<summary>${r.remote ? "远程来源" : "安装于 " + copies.length + " 个位置"}</summary><div class="fold-body">${copies.map((x) => `<div class="installation ${r.id === x.id ? "current" : ""}"><div class="installation-header"><span>${esc(x.remote ? x.source : x.agentLabel)}</span><small>${x.remote ? "GitHub" : x.linked ? "链接" : x.readonly ? "只读" : "可编辑"}</small></div><div class="path">${esc(x.remote ? x.source + "/" + x.skillId : x.path)}</div>${!x.remote ? `<button data-open-copy="${esc(x.id)}">${x.id === r.id ? "当前副本" : "切换此副本"}</button> ${finderAction(x)}` : ""}</div>`).join("")}</div>`;
   panel.querySelector(".editor-actions").before(overview);
   bindFinderActions(panel);
-  for (let b of overview.querySelectorAll("[data-open-copy]"))
-    b.onclick = () => {
-      const x = records.find((x) => x.id === b.dataset.openCopy);
-      if (!x) return;
-      if (x.id === activeId) {
-        detailTab = "source";
-        applyDetailTab();
-      } else {
-        openSkill(x.name, x.id).then(() => {
-          if (activeId === x.id) {
-            detailTab = "source";
-            applyDetailTab();
-          }
-        });
-      }
-    };
-  const files = document.createElement("div");
-  files.className = "detail-files";
-  files.innerHTML = r.files?.length
-    ? r.files
-        .map(
-          (f) =>
-            `<div class="file-entry"><span>${esc(f.path)}</span><small>${f.size < 1024 ? f.size + " B" : (f.size / 1024).toFixed(1) + " KB"}</small></div>`,
-        )
-        .join("")
-    : '<div class="help-note">没有附件。</div>';
+  for (const button of overview.querySelectorAll("[data-open-copy]")) {
+    button.disabled = button.dataset.openCopy === r.id;
+    button.onclick = () => openSkill(r.name, button.dataset.openCopy);
+  }
+  const files = document.createElement("details");
+  files.className = "detail-files detail-fold";
+  const attachments = (r.files || []).filter((f) => f.path !== "SKILL.md");
+  files.innerHTML = `<summary>附件 ${attachments.length}</summary><div class="fold-body">${attachments.length ? attachments.map((f) => `<div class="file-entry"><span>${esc(f.path)}</span><small>${f.size < 1024 ? f.size + " B" : (f.size / 1024).toFixed(1) + " KB"}</small></div>`).join("") : '<p class="help-note">没有附件。</p>'}</div>`;
   panel.querySelector(".editor-actions").before(files);
-  applyDetailTab();
 }
 function applyDetailTab() {
-  const panel = $("#editor");
-  if (!panel.querySelector(".detail-tabs")) return;
-  for (let b of panel.querySelectorAll("[data-detail-tab]"))
-    b.classList.toggle("current", b.dataset.detailTab === detailTab);
-  panel.querySelector(".location").hidden = detailTab !== "source";
-  panel.querySelector(".document").hidden = detailTab !== "source";
-  panel.querySelector(".detail-overview").hidden = detailTab !== "overview";
-  panel.querySelector(".detail-files").hidden = detailTab !== "files";
-  if ($("#save")) $("#save").hidden = detailTab !== "source";
+  // Content and copy controls stay visible while supplementary sections expand.
 }
 $("#sideDiscover").onclick = discovery;
 $("#sideTrash").onclick = trashModal;

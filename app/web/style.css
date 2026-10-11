@@ -1177,3 +1177,23 @@ details > summary {
   opacity: 0.5;
   cursor: wait;
 }
+
+/* Direct CRUD workspace: persistent copy controls and compact disclosures. */
+.toolbar { flex-wrap: wrap; height: auto; min-height: 58px; }
+.toolbar .search { flex: 1; min-width: 160px; }
+.toolbar .batch { flex-basis: 100%; border-top: 1px solid var(--line); padding-top: 10px; }
+.location-top .finder-button { margin: 0 0 0 auto; white-space: nowrap; }
+.editor .document { min-height: 130px; }
+.editor .detail-fold { flex: 0 0 auto; padding: 0; margin: 0; border-top: 1px solid var(--line); overflow: visible; }
+.detail-fold > summary { padding: 11px 16px; color: var(--muted); font-size: 11px; cursor: pointer; }
+.detail-fold[open] > summary { color: var(--accent); }
+.detail-fold .fold-body { max-height: 28vh; overflow: auto; padding: 0 16px 12px; }
+.editor-actions { flex-shrink: 0; background: white; }
+.draft-fields { padding: 16px 16px 0; }
+.draft-fields .field { margin-bottom: 12px; }
+.draft-fields input, .draft-fields select { width: 100%; }
+.draft-error { margin: 0; padding: 0 16px 10px; color: var(--danger, #c35151); font-size: 11px; }
+.draft-error:empty { display: none; }
+.choice.installed { opacity: .6; }
+.choice small { display: block; color: var(--muted); margin-top: 3px; }
+.source-filters .filter-chip { margin-left: auto; border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; }
