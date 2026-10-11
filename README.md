@@ -1,5 +1,7 @@
 # SkillDock
 
+[简体中文](README.md) · [English](README.en.md)
+
 macOS 独立桌面窗口应用，统一管理本机各类 Agent 的**用户级全局技能**。
 
 [下载 macOS Apple Silicon 应用](https://github.com/Way-To-AGI/SkillDock/releases) · [测试记录](docs/TESTING.md) · MIT License
