@@ -1161,3 +1161,19 @@ details > summary {
   padding: 12px 0;
   color: var(--muted);
 }
+
+.location .finder-button {
+  margin-top: 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #7889c8;
+  font-size: 10px;
+}
+.installation .finder-button {
+  margin-left: 14px;
+}
+.finder-button:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}

@@ -291,7 +291,7 @@ class Store:
         roots = [{**r, 'exists': Path(r['path']).is_dir(),
                   'count': sum(s['rootId'] == r['id'] for s in skills)} for r in self.config['roots']]
         return {'skills': skills, 'roots': roots, 'trash': self.config['trash'],
-                'activity': self.config['activity'], 'version': '1.3.0', 'discovery': self.scan_report}
+                'activity': self.config['activity'], 'version': '1.3.1', 'discovery': self.scan_report}
 
     def detail(self, identity):
         item = self.skill(identity)

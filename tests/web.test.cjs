@@ -66,3 +66,55 @@ test("Readonly linked skill removable; readonly system not removable", () => {
     false,
   );
 });
+test("Finder action includes readonly local copies and escapes IDs; remote has none", () => {
+  const ctx = context();
+  for (const flags of [{}, { readonly: true }, { readonly: true, linked: true }]) {
+    ctx.record = { id: 'id"<&', ...flags };
+    const html = vm.runInContext("finderAction(record)", ctx);
+    assert.match(html, /data-reveal-skill="id&quot;&lt;&amp;"/);
+    assert.match(html, /在 Finder 中显示/);
+  }
+  assert.equal(vm.runInContext("finderAction({remote:true})", ctx), "");
+});
+test("Finder click targets the selected copy, prevents repeat clicks and preserves editor", async () => {
+  const ctx = context();
+  const button = { dataset: { revealSkill: "copy-two" }, disabled: false };
+  ctx.container = { querySelectorAll: () => [button] };
+  let request, complete;
+  ctx.fetch = async (url, options) => {
+    request = { url, options };
+    await new Promise(resolve => { complete = resolve; });
+    return { ok: true, json: async () => ({ message: "已在 Finder 中显示" }) };
+  };
+  const messages = [];
+  ctx.recordMessage = message => messages.push(message);
+  vm.runInContext('notify=recordMessage; activeId="original"; dirty=true; detailTab="source"; bindFinderActions(container)', ctx);
+  const pending = button.onclick();
+  assert.equal(button.disabled, true);
+  assert.equal(request.url, "/api/reveal");
+  assert.deepEqual(JSON.parse(request.options.body), { id: "copy-two" });
+  complete();
+  await pending;
+  assert.equal(button.disabled, false);
+  assert.deepEqual(messages, ["已在 Finder 中显示"]);
+  assert.equal(vm.runInContext("activeId", ctx), "original");
+  assert.equal(vm.runInContext("dirty", ctx), true);
+  assert.equal(vm.runInContext("detailTab", ctx), "source");
+});
+test("Finder failures notify the user and re-enable the button", async () => {
+  const ctx = context();
+  const button = { dataset: { revealSkill: "missing" }, disabled: false };
+  ctx.container = { querySelectorAll: () => [button] };
+  ctx.fetch = async () => ({ ok: false, json: async () => ({ error: "技能不存在" }) });
+  const messages = [];
+  ctx.recordMessage = message => messages.push(message);
+  vm.runInContext("notify=recordMessage; bindFinderActions(container)", ctx);
+  await button.onclick();
+  assert.deepEqual(messages, ["技能不存在"]);
+  assert.equal(button.disabled, false);
+});
+test("Both installation overview and source detail include and bind Finder actions", () => {
+  assert.match(source, /\$\{finderAction\(r\)\}/);
+  assert.match(source, /\$\{finderAction\(x\)\}/);
+  assert.match(source, /before\(overview\);\s+bindFinderActions\(panel\)/);
+});

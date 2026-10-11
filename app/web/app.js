@@ -32,6 +32,24 @@ const lock =
   '<span class="lock" title="只读"><svg width="11" height="12" viewBox="0 0 16 18" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="8" width="12" height="8" rx="2"/><path d="M5 8V5a3 3 0 0 1 6 0v3"/></svg></span>';
 const writable = (r) => !r.readonly,
   removable = (r) => !r.readonly || r.linked;
+function finderAction(r) {
+  return r.remote ? "" : `<button class="finder-button" data-reveal-skill="${esc(r.id)}" title="在 Finder 中定位技能文件夹">在 Finder 中显示</button>`;
+}
+function bindFinderActions(container) {
+  for (const button of container.querySelectorAll("[data-reveal-skill]")) {
+    button.onclick = async () => {
+      button.disabled = true;
+      try {
+        const result = await api("/api/reveal", { id: button.dataset.revealSkill });
+        notify(result.message);
+      } catch (error) {
+        notify(error.message);
+      } finally {
+        button.disabled = false;
+      }
+    };
+  }
+}
 function groups() {
   let map = new Map();
   for (let r of records) {
@@ -226,7 +244,7 @@ function renderEditorCore() {
   }
   el.hidden = false;
   let copies = r.remote ? [r] : records.filter((x) => x.name === r.name);
-  el.innerHTML = `<div class="editor-head"><span class="editor-title">${esc(r.name)} <span id="changed" class="badge"></span></span><button id="closeEditor" class="icon" aria-label="关闭编辑器">×</button></div><div class="location"><div class="location-top">${copies.length > 1 ? `<select id="locationSelect" aria-label="选择技能副本">${copies.map((x) => `<option value="${esc(x.id)}" ${x.id === r.id ? "selected" : ""}>${esc(x.agentLabel)}${x.readonly ? " · 只读" : ""}</option>`).join("")}</select>` : `<span>${esc(r.remote ? r.source : r.agentLabel)}</span>`}<span class="readonly">${r.remote ? "skills.sh" : r.readonly ? "只读" : ""}</span></div><div class="path">${esc(r.remote ? r.source + "/" + r.skillId : r.path + "/SKILL.md")}</div>${r.usedBy?.length > 1 ? `<div class="tiny">源文件被 ${esc(r.usedBy.join("、"))} 引用，保存会影响这些引用。</div>` : ""}${r.linked && r.canonicalId ? '<button id="editSource" class="link-button">编辑全局源文件 ↗</button>' : ""}</div><textarea class="document" id="content" spellcheck="false" aria-label="SKILL.md 内容" ${r.readonly ? "readonly" : ""}></textarea><div class="editor-actions">${r.remote ? '<button id="install" class="primary">安装到…</button>' : `${!r.readonly ? '<button id="save" class="primary" disabled>保存</button>' : ""}<button id="copy">复制到…</button><span class="spacer"></span>${removable(r) ? '<button id="delete" class="danger">删除</button>' : ""}`}</div>`;
+  el.innerHTML = `<div class="editor-head"><span class="editor-title">${esc(r.name)} <span id="changed" class="badge"></span></span><button id="closeEditor" class="icon" aria-label="关闭编辑器">×</button></div><div class="location"><div class="location-top">${copies.length > 1 ? `<select id="locationSelect" aria-label="选择技能副本">${copies.map((x) => `<option value="${esc(x.id)}" ${x.id === r.id ? "selected" : ""}>${esc(x.agentLabel)}${x.readonly ? " · 只读" : ""}</option>`).join("")}</select>` : `<span>${esc(r.remote ? r.source : r.agentLabel)}</span>`}<span class="readonly">${r.remote ? "skills.sh" : r.readonly ? "只读" : ""}</span></div><div class="path">${esc(r.remote ? r.source + "/" + r.skillId : r.path + "/SKILL.md")}</div>${finderAction(r)}${r.usedBy?.length > 1 ? `<div class="tiny">源文件被 ${esc(r.usedBy.join("、"))} 引用，保存会影响这些引用。</div>` : ""}${r.linked && r.canonicalId ? '<button id="editSource" class="link-button">编辑全局源文件 ↗</button>' : ""}</div><textarea class="document" id="content" spellcheck="false" aria-label="SKILL.md 内容" ${r.readonly ? "readonly" : ""}></textarea><div class="editor-actions">${r.remote ? '<button id="install" class="primary">安装到…</button>' : `${!r.readonly ? '<button id="save" class="primary" disabled>保存</button>' : ""}<button id="copy">复制到…</button><span class="spacer"></span>${removable(r) ? '<button id="delete" class="danger">删除</button>' : ""}`}</div>`;
   $("#content").value = r.content || "";
   $("#content").oninput = () => {
     dirty = $("#content").value !== r.content;
@@ -918,8 +936,9 @@ function renderEditor() {
   const overview = document.createElement("div");
   overview.className = "detail-overview";
   const copies = r.remote ? [r] : records.filter((x) => x.name === r.name);
-  overview.innerHTML = `<p class="detail-description">${esc(r.description || "暂无描述")}</p><p class="detail-label">${r.remote ? "远程来源" : "已安装 " + copies.length + " 份"}</p>${copies.map((x) => `<div class="installation ${r.id === x.id ? "current" : ""}"><div class="installation-header"><span>${esc(x.remote ? x.source : x.agentLabel)}</span><small>${x.remote ? "GitHub" : x.linked ? "链接" : x.readonly ? "只读" : "可编辑"}</small></div><div class="path">${esc(x.remote ? x.source + "/" + x.skillId : x.path)}</div>${!x.remote ? `<button data-open-copy="${esc(x.id)}">${x.id === r.id ? "编辑此副本" : "打开此副本"} ↗</button>` : ""}</div>`).join("")}<div class="help-note">${r.remote ? "安装包含完整技能文件夹。" : r.usedBy?.length > 1 ? "当前源文件被 " + esc(r.usedBy.join("、")) + " 引用。" : "复制到其他 Agent 后成为独立副本；保存针对当前选中的路径。"}</div>`;
+  overview.innerHTML = `<p class="detail-description">${esc(r.description || "暂无描述")}</p><p class="detail-label">${r.remote ? "远程来源" : "已安装 " + copies.length + " 份"}</p>${copies.map((x) => `<div class="installation ${r.id === x.id ? "current" : ""}"><div class="installation-header"><span>${esc(x.remote ? x.source : x.agentLabel)}</span><small>${x.remote ? "GitHub" : x.linked ? "链接" : x.readonly ? "只读" : "可编辑"}</small></div><div class="path">${esc(x.remote ? x.source + "/" + x.skillId : x.path)}</div>${!x.remote ? `<button data-open-copy="${esc(x.id)}">${x.id === r.id ? "编辑此副本" : "打开此副本"} ↗</button> ${finderAction(x)}` : ""}</div>`).join("")}<div class="help-note">${r.remote ? "安装包含完整技能文件夹。" : r.usedBy?.length > 1 ? "当前源文件被 " + esc(r.usedBy.join("、")) + " 引用。" : "复制到其他 Agent 后成为独立副本；保存针对当前选中的路径。"}</div>`;
   panel.querySelector(".editor-actions").before(overview);
+  bindFinderActions(panel);
   for (let b of overview.querySelectorAll("[data-open-copy]"))
     b.onclick = () => {
       const x = records.find((x) => x.id === b.dataset.openCopy);

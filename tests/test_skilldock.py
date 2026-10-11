@@ -105,7 +105,22 @@ class StoreTests(unittest.TestCase):
     def test_reveal(self):
         id=self.create()
         with patch.object(app.sys,'platform','darwin'),patch.object(app.subprocess,'Popen') as spawn:
-            self.store.reveal({'id':id});self.assertEqual(spawn.call_args.args[0][0],'/usr/bin/open')
+            self.assertEqual(self.store.reveal({'id':id})['message'], '已在 Finder 中显示')
+            spawn.assert_called_once_with(['/usr/bin/open', '-R', self.store.skill(id)['path']])
+    def test_reveal_readonly_system_plugin_and_link(self):
+        source_id=self.create();source=Path(self.store.skill(source_id)['path'])
+        fixture(Path(self.one['path'])/'.system/builtin')
+        self.two['readonly']=True
+        fixture(Path(self.two['path'])/'plugin')
+        (Path(self.two['path'])/'linked').symlink_to(source, target_is_directory=True)
+        with patch.object(app.sys,'platform','darwin'),patch.object(app.subprocess,'Popen') as spawn:
+            for record in self.store.records():
+                with self.subTest(path=record['path']):
+                    self.store.reveal({'id':record['id']})
+                    self.assertEqual(spawn.call_args.args[0], ['/usr/bin/open', '-R', record['path']])
+            self.assertEqual(spawn.call_count, 4)
+    def test_reveal_missing_skill_rejected(self):
+        self.rejects(404, self.store.reveal, {'id':'missing'})
     def archive(self):
         buffer=io.BytesIO()
         with zipfile.ZipFile(buffer,'w') as z:
